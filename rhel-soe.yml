@@ -40,3 +40,6 @@
     - "rhel-7-server-extras-rpms"
     - "rhel-7-server-{{ oseversion }}-rpms"
     - "rhel-7-fast-datapath-rpms"
+
+  - name: upgrade all packages
+    yum: name=* state=latest
