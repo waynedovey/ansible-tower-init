@@ -1,0 +1,42 @@
+---
+- name: SOE Install
+  hosts: OSEv3 
+  become: true 
+  gather_facts: True
+  tasks:
+
+  - name: set timezone to Australia/Sydney
+    timezone:
+      name: Australia/Sydney
+
+  - name: Install base packages
+    yum: name={{ item }} state=installed
+    with_items:
+      - subscription-manager
+      - wget
+      - vim
+    tags:
+      - packages
+    ignore_errors: yes
+
+  - name: Register system
+    redhat_subscription:
+      state: present
+      username: '{{ rhsm_username }}'
+      password: '{{ rhsm_password }}'
+      pool: '^Red Hat OpenShift Container Platform Broker/Master Infrastructure$'
+
+
+  - name: Disable all RHSM repositories
+    rhsm_repository:
+      name: '*'
+      state: disabled
+
+  - name: Enable specified repositories not already enabled
+    command: subscription-manager repos --enable={{ item }}
+    with_items:
+    - "rhel-7-server-rpms"
+    - "rhel-7-server-{{ ansibleversion }}-rpms"
+    - "rhel-7-server-extras-rpms"
+    - "rhel-7-server-{{ oseversion }}-rpms"
+    - "rhel-7-fast-datapath-rpms"

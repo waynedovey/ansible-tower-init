@@ -1,0 +1,15 @@
+- name: Start Cluster nodes 
+  hosts: localhost
+
+  tasks:
+    - name: Start all nodes 
+      gce:
+          instance_names: "{{ (tag_node-env1.stdout | from_json)[0].name }}"
+          #zone: "{{ zone_name }}"
+          service_account_email: "{{ service_account_email }}"
+          credentials_file: "{{ credentials_file }}"
+          project_id: "{{ project_id }}"
+          state: started
+      register: gce
+      ignore_errors: yes
+      when: (cluster_instance_names.stdout | from_json)

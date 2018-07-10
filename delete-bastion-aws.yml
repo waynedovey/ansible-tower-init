@@ -1,0 +1,30 @@
+- name: Delete Bastion Host
+  hosts: localhost
+  gather_facts: no
+  connection: local
+  vars:
+  tasks:
+    - name: Delete instances
+      ec2:
+         key_name: "{{ keypair }}"
+         state: absent
+         group_id: "{{ security_group_id }}"
+         instance_type: "{{ instance_type }}"
+         image: "{{ image }}"
+         wait: true
+         region: "{{ region }}"
+         vpc_subnet_id: "{{ vpc_subnet_id}}"
+         assign_public_ip: yes
+         instance_tags:
+             env_id: "{{ env_id }}"
+      register: ec2
+
+    - name: Delete DNS record
+      route53:
+        state: delete
+        record: "{{ instance_names }}.{{ dns_zone}}"
+        command: delete
+        zone: "{{ dns_zone}}"
+        type: A
+        value: "{{ item.public_ip }}"
+      with_items: "{{ ec2.instances }}"

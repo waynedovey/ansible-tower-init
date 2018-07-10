@@ -1,0 +1,11 @@
+- name: Stop Cluster nodes 
+  hosts: OSEv3
+
+  tasks:
+    - name: Stop all nodes 
+      gce:
+          tags:
+            - node-{{ env_id }}
+          state: stopped
+      register: gce
+      ignore_errors: yes

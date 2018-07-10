@@ -1,0 +1,21 @@
+- name: Delete Bastion Host
+  hosts: localhost
+  gather_facts: no
+  connection: local
+
+  vars:
+    image: rhel-7
+
+  tasks:
+    - name: Delete instances
+      gce:
+          instance_names: bastion
+          zone: "{{ gcp_zone }}"
+          state: absent
+          machine_type: "{{ machine_type }}"
+          image: "{{ image }}"
+          service_account_email: "{{ service_account_email }}"
+          credentials_file: "{{ credentials_file }}"
+          project_id: "{{ project_id }}"
+          tags: bastion
+      register: gce

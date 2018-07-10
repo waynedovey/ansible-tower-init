@@ -1,0 +1,12 @@
+---
+- name: Install Galaxy Roles
+  hosts: "{{ hosts }}" 
+  become: true
+
+  tasks:
+  - name: Install ansible-galaxy
+    command: ansible-galaxy install -r roles/requirements.yml -p ./roles/ --force
+    register: ansible-galaxy
+
+  roles:
+     - role: wtanaka.gcloud-sdk
