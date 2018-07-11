@@ -24,7 +24,7 @@
       state: present
       username: '{{ rhsm_username }}'
       password: '{{ rhsm_password }}'
-      pool: '^Red Hat OpenShift Container Platform Broker/Master Infrastructure$'
+      pool: '^Red Hat OpenShift Container Platform, Premium, 2-Core$'
 
 
   - name: Disable all RHSM repositories
