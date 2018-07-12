@@ -25,6 +25,7 @@
       username: '{{ rhsm_username }}'
       password: '{{ rhsm_password }}'
       pool: '^Red Hat OpenShift Container Platform, Premium, 2-Core$'
+      force_register: yes
 
 
   - name: Disable all RHSM repositories
