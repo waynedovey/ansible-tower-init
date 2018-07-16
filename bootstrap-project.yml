@@ -2,6 +2,8 @@
 - name: Bootstrap Tower Project 
   hosts: localhost
   become: true 
+  vars:
+    profile: '{{ AWS_profile }}'
   tasks:
   - name: Create Inventory
     command: 'tower-cli inventory create --name "{{ inventory_name }}" --organization "{{ organization_name }}"'
