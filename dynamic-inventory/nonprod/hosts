@@ -1,0 +1,43 @@
+
+#[all:vars]
+# For all group_vars, see ./group_vars/all.yml
+
+# Create an OSEv3 group that contains the master, nodes, etcd, and lb groups.
+# The lb group lets Ansible configure HAProxy as the load balancing solution.
+# Comment lb out if your load balancer is pre-configured.
+[cluster_hosts:children]
+OSEv3
+
+[OSEv3:children]
+masters
+nodes
+etcd
+glusterfs
+
+# Set variables common for all OSEv3 hosts
+#[OSEv3:vars]
+
+# For OSEv3 normal group vars, see ./group_vars/OSEv3.yml
+
+# Host Groups
+
+[masters:children]
+tag_openshift_role_master
+
+[etcd:children]
+tag_openshift_role_master
+
+[nodes:children]
+masters
+infra_hosts
+tag_openshift_role_infra
+tag_openshift_role_app
+
+[infra_hosts:children]
+tag_openshift_role_infra
+
+[glusterfs:children]
+
+[tag_openshift_role_master]
+[tag_openshift_role_infra]
+[tag_openshift_role_app]

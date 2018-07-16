@@ -1,0 +1,2 @@
+---
+openshift_node_labels: "{'region': 'infra', 'role': 'infra'}"
