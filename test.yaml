@@ -1,0 +1,7 @@
+---
+- name: Test Playbook
+  hosts: OSEv3 
+  tasks:
+
+  - name: Uptime command
+    command: uptime 
