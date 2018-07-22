@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 umask 0022
-source /etc/pipeline/profile
 
 export svcaccount=admin
 export svcpass=supersecret
