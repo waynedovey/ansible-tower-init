@@ -1,0 +1,53 @@
+---
+- name: Bootstrap Tower Project
+  hosts: localhost
+  gather_facts: true
+  become: true
+  vars:
+   TOWER_USERNAME:  "{{ lookup('env','TOWER_USERNAME') }}"
+   TOWER_PASSWORD: "{{ lookup('env','TOWER_PASSWORD') }}"
+   TOWER_HOST: "{{ lookup('env','TOWER_HOST') }}"
+   organization_name: "Default"
+   aws_regions: ap-southeast-2
+   ansible_user: openshift
+
+  tasks:
+  - name: Create Inventory
+    command: 'tower-cli inventory create --name "aws-inventory-{{ branch }}-{{ buildnumber }}" --organization "{{ organization_name }}"'
+    ignore_errors: yes
+
+  - name: Create Inventory source
+    shell: 'tower-cli inventory_source create --name=aws-src-{{ branch }}-{{ buildnumber }} --source-regions={{ aws_regions }} --source=ec2 --inventory aws-inventory-{{ branch }}-{{ buildnumber }} --overwrite=true --overwrite-vars=true --update-on-launch=true --update-cache-timeout=0 --source-vars=''{"instance_filters": "tag:branch={{ branch }},tag:build_number={{ buildnumber }}","destination_variable": "private_ip_address","vpc_destination_variable": "private_ip_address","route53": false,"rds": false,"elasticache": false,"all_instances": false,"all_rds_instances": false,"all_elasticache_replication_groups": false,"all_elasticache_clusters": false,"all_elasticache_nodes": false,"nested_groups": false,"replace_dash_in_groups": true,"expand_csv_tags": false,"group_by_instance_id": true,"group_by_region": true,"group_by_availability_zone": true,"group_by_ami_id": true,"group_by_instance_type": true,"group_by_key_pair": true,"group_by_vpc_id": true,"group_by_security_group": true,"group_by_tag_keys": true,"group_by_tag_none": true,"group_by_route53_names": true,"stack_filters": true}'''
+    ignore_errors: yes
+
+  - name: Install base packages
+    command: 'tower-cli group create --name={{ item }}  --inventory="aws-inventory-{{ branch }}-{{ buildnumber }}"'
+    with_items:
+      - cluster_hosts
+      - OSEv3
+      - masters
+      - nodes
+      - etcd
+      - infra_hosts
+      - tag_component_example_ocp_mastercluster
+      - tag_component_example_ocp_nodecluster
+      - tag_component_example_ocp_infracluster
+    tags:
+      - cluster_hosts
+    ignore_errors: yes
+
+  - name: Inventory group association (OpenShift)
+    command: "{{ item }}"
+    with_items:
+      - 'tower-cli group associate --parent=cluster_hosts --group=OSEv3 --inventory="aws-inventory-{{ branch }}-{{ buildnumber }}"'
+      - 'tower-cli group associate --parent=OSEv3 --group=masters --inventory="aws-inventory-{{ branch }}-{{ buildnumber }}"'
+      - 'tower-cli group associate --parent=OSEv3 --group=nodes --inventory="aws-inventory-{{ branch }}-{{ buildnumber }}"'
+      - 'tower-cli group associate --parent=OSEv3 --group=etcd --inventory="aws-inventory-{{ branch }}-{{ buildnumber }}"'
+      - 'tower-cli group associate --parent=masters --group=tag_component_example_ocp_mastercluster --inventory="aws-inventory-{{ branch }}-{{ buildnumber }}"'
+      - 'tower-cli group associate --parent=etcd --group=tag_component_example_ocp_mastercluster --inventory="aws-inventory-{{ branch }}-{{ buildnumber }}"'
+      - 'tower-cli group associate --parent=nodes --group=tag_component_example_ocp_nodecluster --inventory="aws-inventory-{{ branch }}-{{ buildnumber }}"'
+      - 'tower-cli group associate --parent=nodes --group=tag_component_example_ocp_infracluster --inventory="aws-inventory-{{ branch }}-{{ buildnumber }}"'
+      - 'tower-cli group associate --parent=nodes --group=masters --inventory="aws-inventory-{{ branch }}-{{ buildnumber }}"'
+      - 'tower-cli group associate --parent=nodes --group=infra_hosts --inventory="aws-inventory-{{ branch }}-{{ buildnumber }}"'
+      - 'tower-cli group associate --parent=infra_hosts --group=tag_component_example_ocp_infracluster  --inventory="aws-inventory-{{ branch }}-{{ buildnumber }}"'
+    ignore_errors: yes

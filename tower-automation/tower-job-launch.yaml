@@ -1,0 +1,78 @@
+---
+- name: Tower remote excute commands
+  hosts: localhost
+  gather_facts: False
+  become: true
+  vars:
+   TOWER_USERNAME:  "{{ lookup('env','TOWER_USERNAME') }}"
+   TOWER_PASSWORD: "{{ lookup('env','TOWER_PASSWORD') }}" 
+   TOWER_HOST: "{{ lookup('env','TOWER_HOST') }}"
+
+  tasks:
+    - name: GET Job template ID
+      uri:
+        url: "{{ TOWER_HOST }}/api/v2/job_templates/?name={{ job_template }}"
+        validate_certs: no
+        method: GET
+        user: "{{ TOWER_USERNAME }}"
+        password: "{{ TOWER_PASSWORD }}"      
+        status_code: 200,400
+        headers:
+          "Content-Type": "application/json"
+        body_format: json
+        return_content: yes
+      register: job_templates_id
+
+    - name: print results 
+      debug:
+        var: job_templates_id.json.results.0.id
+
+    - set_fact:
+        job_id: "{{ job_templates_id.json.results.0.id }}"
+
+    - name: print results 
+      debug:
+        var: job_id
+
+    - name: GET Inventories
+      uri:
+        url: "{{ TOWER_HOST }}/api/v2/inventories/?name=aws-inventory-{{ branch }}-{{ buildnumber }}"
+        validate_certs: no
+        method: GET
+        user: "{{ TOWER_USERNAME }}"
+        password: "{{ TOWER_PASSWORD }}"      
+        status_code: 200,400
+        headers:
+          "Content-Type": "application/json"
+        body_format: json
+        return_content: yes
+      register: inventory_templates_id
+
+    - name: print results 
+      debug:
+        var: inventory_templates_id.json.results.0.id
+
+    - set_fact:
+        inventory_id: "{{ inventory_templates_id.json.results.0.id }}"
+
+    - name: print results 
+      debug:
+        var: inventory_id        
+
+    - name: Launch a Job 
+      uri:
+        url: "{{ TOWER_HOST }}/api/v2/job_templates/{{ job_id }}/launch/"
+        validate_certs: no
+        method: POST
+        user: "{{ TOWER_USERNAME }}"
+        password: "{{ TOWER_PASSWORD }}"
+        status_code: 201
+        headers:
+          "Content-Type": "application/json"        
+        body:
+          inventory: "{{ inventory_id }}"
+          extra_vars:
+            clusterid: "{{ branch }}-{{ buildnumber }}"
+            cluster_rel: "{{ branch }}"
+        body_format: json
+...
